@@ -1,15 +1,22 @@
 package InstructionQueuePackage;
-
+import LoadBufferPackage.LoadBuffer;
+import LoadBufferPackage.LoadBufferObserver;
 import MainPackage.Executor;
+import MainPackage.ExecutorObserver;
 import MessagesPackage.Message;
+import ReservationStationPackage.ReservationStation;
 import ReservationStationPackage.ReservationStationObserver;
+import StoreBuffer.StoreBuffer;
+import StoreBuffer.StoreBufferObserver;
 
 import java.util.*;
 
-public class InstructionQueue implements InstructionQueueSubject, ReservationStationObserver {
+public class InstructionQueue implements InstructionQueueSubject, ExecutorObserver, ReservationStationObserver, LoadBufferObserver, StoreBufferObserver {
 
     ArrayList<InstructionQueueObserver> observers;
     Queue<Instruction> instructions;
+
+    boolean send;
 
 
     public InstructionQueue() {
@@ -35,53 +42,136 @@ public class InstructionQueue implements InstructionQueueSubject, ReservationSta
         observers.remove(o);
     }
 
+
+    /* Reservation Station start */
+
+    /* Send Data start */
     @Override
-    public void notifyObservers() {
+    public void notifyReservationStation() {
         HashMap<String, String> message = new HashMap<>();
         for (InstructionQueueObserver o : observers) {
-            if(instructions.size() > 0) {
-                instructions.peek().setIssueCycle(Executor.cycle);
-                System.out.println("InstructionQueue: " + instructions.peek());
-                message.put("newInstruction", Objects.requireNonNull(instructions.poll()).toString());
-                o.instructionQueueUpdate(new Message(message));
-            } else System.out.println("Instruction Queue is empty");
+            if (o instanceof ReservationStation) {
+                if(instructions.size() > 0) {
+                    instructions.peek().setIssueCycle(Executor.cycle);
+                    System.out.println("InstructionQueue: " + instructions.peek());
+                    message.put("newInstruction", Objects.requireNonNull(instructions.poll()).toString());
+                    o.instructionQueueUpdate(new Message(message));
+                } else System.out.println("Instruction Queue is empty");
+            }
         }
     }
+    /* Send Data end */
 
+    /* Receive data start  */
     @Override
-    public void updateInstructionQueue(Message message) {
+    public void ReservationUpdateInstructionQueue(Message message) {
         int addSubStationSize = message.getAddSubStationSize();
         int mulDivStationSize = message.getMulDivStationSize();
         Instruction next = instructions.peek();
         if (addSubStationSize > 0 && instructions.size() > 0 &&
                 (Objects.requireNonNull(next).getOp().equals("ADD") ||
-                        Objects.requireNonNull(next).getOp().equals("SUB")))
+                        Objects.requireNonNull(next).getOp().equals("SUB")) && !send)
         {
-            notifyObservers();
+            notifyReservationStation();
+            send = true;
         }
         else if (mulDivStationSize > 0 && instructions.size() > 0 &&
                 (Objects.requireNonNull(next).getOp().equals("MUL") ||
-                        Objects.requireNonNull(next).getOp().equals("DIV")))
+                        Objects.requireNonNull(next).getOp().equals("DIV")) && !send)
         {
-            notifyObservers();
+            notifyReservationStation();
+            send = true;
         }
         else {
-            System.out.println("Reservation station is full");
+            System.out.println("Can not notify reservation station");
+        }
+    }
+    /* Receive data end  */
+
+    /* Reservation Station end */
+
+
+
+    /* Load Buffer start */
+
+    /* Send Data start */
+    @Override
+    public void notifyLoadBuffer() {
+        HashMap<String, String> message = new HashMap<>();
+        for (InstructionQueueObserver o : observers) {
+            if (o instanceof LoadBuffer) {
+                if(instructions.size() > 0) {
+                    instructions.peek().setIssueCycle(Executor.cycle);
+                    message.put("newInstruction", Objects.requireNonNull(instructions.poll()).toString());
+                    o.instructionQueueUpdate(new Message(message));
+                } else System.out.println("Instruction Queue is empty");
+            }
+        }
+    }
+    /* Send Data end */
+
+    /* Receive data start */
+
+    @Override
+    public void LoadBufferUpdateQueue(Message message) {
+        int loadBufferSize = message.getBufferSize();
+        Instruction next = instructions.peek();
+        if (loadBufferSize > 0 && instructions.size() > 0 &&
+                (Objects.requireNonNull(next).getOp().equals("LW")) && !send)
+        {
+            notifyLoadBuffer();
+            send = true;
+        }
+        else {
+            System.out.println("Can not notify load buffer");
         }
     }
 
+    /* Receive data end  */
+
+    /* Load Buffer end */
+
+
+
+    /* Store Buffer start */
+
+    /* Send Data start */
     @Override
-    public void updateRegisterFile(Message message) {
-        // do nothing
+    public void notifyStoreBuffer() {
+        HashMap<String, String> message = new HashMap<>();
+        for (InstructionQueueObserver o : observers) {
+            if (o instanceof StoreBuffer) {
+                if(instructions.size() > 0) {
+                    instructions.peek().setIssueCycle(Executor.cycle);
+                    System.out.println("InstructionQueue: " + instructions.peek());
+                    message.put("newInstruction", Objects.requireNonNull(instructions.poll()).toString());
+                    o.instructionQueueUpdate(new Message(message));
+                } else System.out.println("Instruction Queue is empty");
+            }
+        }
     }
+    /* Send Data end */
 
+    /* Receive data start */
     @Override
-    public void updateDataBus(Message message) {
-
+    public void storeBufferUpdateQueue(Message message) {
+        int storeBufferSize = message.getBufferSize();
+        Instruction next = instructions.peek();
+        if (storeBufferSize > 0 && instructions.size() > 0 &&
+                (Objects.requireNonNull(next).getOp().equals("SW")) && !send)
+        {
+            notifyStoreBuffer();
+            send = true;
+        }
+        else {
+            System.out.println("Can not notify store buffer");
+        }
     }
+    /* Receive data end  */
+
+    /* Store Buffer end */
 
 
-    // function to convert the instruction queue to a json string
     public String toJson() {
         StringBuilder json = new StringBuilder();
         json.append("[");
@@ -94,4 +184,27 @@ public class InstructionQueue implements InstructionQueueSubject, ReservationSta
     }
 
 
+    @Override
+    public void ReservationUpdateRegisterFile(Message message) {}
+    @Override
+    public void ReservationUpdateDataBus(Message message) {}
+    @Override
+    public void ReservationUpdateLoadBuffer(Message message) {}
+    @Override
+    public void ReservationUpdateStoreBuffer(Message message) {}
+    @Override
+    public void storeBufferUpdateRegFile(Message message) {}
+    @Override
+    public void storeBufferUpdateReservation(Message message) {}
+    @Override
+    public void LoadBufferUpdateRegFile(Message message) {}
+    @Override
+    public void LoadBufferUpdateDataBus(Message message) {}
+    @Override
+    public void LoadBufferUpdateReservation(Message message) {}
+
+    @Override
+    public void updateClock() {
+        send = false;
+    }
 }

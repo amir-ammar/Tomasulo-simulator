@@ -3,16 +3,21 @@ import DataBusPackage.DataBus;
 import DataBusPackage.DataBusObserver;
 import InstructionQueuePackage.InstructionQueue;
 import InstructionQueuePackage.InstructionQueueObserver;
+import LoadBufferPackage.LoadBuffer;
+import LoadBufferPackage.LoadBufferObserver;
 import MainPackage.ExecutorObserver;
 import MessagesPackage.Message;
 import RegisterFilePackage.RegisterFile;
 import RegisterFilePackage.RegisterFileObserver;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import ALUPackage.ALU;
+import StoreBuffer.StoreBuffer;
+import StoreBuffer.StoreBufferObserver;
 
-public class ReservationStation implements InstructionQueueObserver, ExecutorObserver, ReservationStationSubject, RegisterFileObserver, DataBusObserver
+public class ReservationStation implements InstructionQueueObserver, ExecutorObserver, ReservationStationSubject, RegisterFileObserver, DataBusObserver, LoadBufferObserver, StoreBufferObserver
 {
 
     ReservationStationItem[] AddSubStation;
@@ -30,14 +35,20 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
 
     boolean newInstruction;
 
+    boolean writeToDataBus;
+
+    ArrayList <String> storeBufferRequiredLabels;
+
     public ReservationStation() {
         addSubStationEmpty = 3;
         mulDivStationEmpty = 2;
         addSubPointer = 0;
         mulDivPointer = 0;
         newInstruction = false;
+        writeToDataBus = true;
         AddSubStation = new ReservationStationItem[3];
         MulDivStation = new ReservationStationItem[2];
+        storeBufferRequiredLabels = new ArrayList<>();
         observers = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             AddSubStation[i] = new ReservationStationItem("A" + i);
@@ -48,13 +59,15 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
     }
 
 
+
     static class Tuple implements Comparable<Tuple>{
-        int index;
+        String label;
         int priority;
         int issueCycle;
 
-        public Tuple(int index, int priority, int issueCycle){
-            this.index = index;
+
+        public Tuple(String label, int priority, int issueCycle){
+            this.label = label;
             this.priority = priority;
             this.issueCycle = issueCycle;
         }
@@ -68,7 +81,7 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
         }
 
         public String toString() {
-            return "index: " + index + " priority: " + priority + " issueCycle: " + issueCycle;
+            return "label: " + label + " priority: " + priority + " issueCycle: " + issueCycle;
         }
 
     }
@@ -88,6 +101,16 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
 
     int getMulDivPointer() {
         return mulDivPointer;
+    }
+
+    @Override
+    public void registerObserver(ReservationStationObserver o) {
+        observers.add(o);
+    }
+
+    @Override
+    public void removeObserver(ReservationStationObserver o) {
+        observers.remove(o);
     }
 
 
@@ -122,40 +145,39 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
     }
 
     /* Send data start */
-    int prioritizeWriteToBus(ArrayList<Tuple> writeBackInstruction) {
+    String prioritizeWriteToBus(ArrayList<Tuple> writeBackInstruction) {
         for (Tuple t: writeBackInstruction) {
-            String label = t.index <= 2 ? AddSubStation[t.index].getLabel() : MulDivStation[t.index - 3].getLabel();
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 5 + storeBufferRequiredLabels.size(); i++) {
                 if (i <= 2) {
                     if (
                                 AddSubStation[i].isBusy() &&
                             (
                                 AddSubStation[i].getQj() != null &&
-                                AddSubStation[i].getQj().equals(label) &&
+                                AddSubStation[i].getQj().equals(t.label) &&
                                 AddSubStation[i].getQk() == null
                             )
                             ||
                             (
                                 AddSubStation[i].getQk() != null &&
-                                AddSubStation[i].getQk().equals(label) &&
+                                AddSubStation[i].getQk().equals(t.label) &&
                                 AddSubStation[i].getQj() == null
                             )
                     )
                     {
                         t.priority++;
                     }
-                } else {
+                } else if (i <= 4){
                     if (
                             MulDivStation[i - 3].isBusy() &&
                         (
                             MulDivStation[i - 3].getQj() != null &&
-                            MulDivStation[i - 3].getQj().equals(label) &&
+                            MulDivStation[i - 3].getQj().equals(t.label) &&
                             MulDivStation[i - 3].getQk() == null
                         )
                         ||
                         (
                             MulDivStation[i - 3].getQk() != null &&
-                            MulDivStation[i - 3].getQk().equals(label) &&
+                            MulDivStation[i - 3].getQk().equals(t.label) &&
                             MulDivStation[i - 3].getQj() == null
 
                         )
@@ -163,39 +185,48 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
                     {
                         t.priority++;
                     }
+                } else {
+                    if (storeBufferRequiredLabels.get(i - 5).equals(t.label)) {
+                        t.priority++;
+                    }
                 }
             }
         }
         System.out.println("Write Back Instruction: " + writeBackInstruction);
         writeBackInstruction.sort(Collections.reverseOrder());
-        return writeBackInstruction.get(0).index;
+        writeToDataBus = writeBackInstruction.get(0).label.charAt(0) != 'L';
+        return writeBackInstruction.get(0).label;
     }
 
     void writeToDataBus() {
-
+        if (!writeToDataBus) return;
         String writeBackInstruction = "";
         ArrayList<Tuple> readyToWrite = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             if (AddSubStation[i].isBusy() && AddSubStation[i].getLatency() == 0) {
-                readyToWrite.add(new Tuple(i, 0, AddSubStation[i].getIssueCycle()));
+                readyToWrite.add(new Tuple(AddSubStation[i].getLabel(), 0, AddSubStation[i].getIssueCycle()));
             }
         }
         for (int i = 0; i < 2; i++) {
             if (MulDivStation[i].isBusy() && MulDivStation[i].getLatency() == 0) {
-                readyToWrite.add(new Tuple(i + 3, 0, MulDivStation[i].getIssueCycle()));
+                readyToWrite.add(new Tuple(MulDivStation[i].getLabel(), 0, MulDivStation[i].getIssueCycle()));
             }
         }
 
         if (readyToWrite.size() == 0) return;
-        int index = prioritizeWriteToBus(readyToWrite);
-        if (index > 2) {
-            writeBackInstruction = "write " + MulDivStation[index - 3].getLabel() + " " + MulDivStation[index - 3].getTargetReg() + " " + performALU(index - 3, 'M');
-            MulDivStation[index - 3].setLatency(-1);
+        String result = prioritizeWriteToBus(readyToWrite);
+        System.out.println("resulttttttttt: " + result);
+        int index = Integer.parseInt(result.substring(1));
+        if (result.charAt(0) == 'M') {
+            writeBackInstruction = "write " + MulDivStation[index].getLabel() + " " + MulDivStation[index].getTargetReg() + " " + performALU(index, 'M');
+            MulDivStation[index].setLatency(-1);
             notifyDataBus(writeBackInstruction);
-        } else {
+        } else if (result.charAt(0) == 'A') {
             writeBackInstruction = "write " + AddSubStation[index].getLabel() + " " + AddSubStation[index].getTargetReg() + " " + performALU(index, 'A');
             AddSubStation[index].setLatency(-1);
             notifyDataBus(writeBackInstruction);
+        } else {
+            System.out.println("");
         }
     }
 
@@ -206,7 +237,7 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
         for (ReservationStationObserver o : observers) {
             if (o instanceof DataBus) {
                 System.out.println("DataBus: " + data);
-                o.updateDataBus(new Message(message));
+                o.ReservationUpdateDataBus(new Message(message));
             }
         }
     }
@@ -300,7 +331,7 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
         message.put("mulDivStationSize", mulDivStationEmpty + "");
         for (ReservationStationObserver o : observers) {
             if (o instanceof InstructionQueue) {
-                o.updateInstructionQueue(new Message(message));
+                o.ReservationUpdateInstructionQueue(new Message(message));
             }
         }
     }
@@ -345,7 +376,7 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
     public void notifyRegisterFile() {
         for (ReservationStationObserver o : observers) {
             if (o instanceof RegisterFile && newInstruction) {
-                o.updateRegisterFile(generateRegisterFileMessage());
+                o.ReservationUpdateRegisterFile(generateRegisterFileMessage());
             }
         }
     }
@@ -438,7 +469,7 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
         }
     }
 
-    void removeFinishedInstruction() {
+    void removeFinishedInstructions() {
         for (int i = 0; i < 5; i++) {
             if (i <= 2) {
                 if (AddSubStation[i].isBusy() && AddSubStation[i].getLatency() == -2) {
@@ -460,24 +491,100 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
     public void updateClock() {
         readFromDataBus();
         writeToDataBus();
-        removeFinishedInstruction();
+        removeFinishedInstructions();
         updateLatency();
         notifyInstructionQueue();
         notifyRegisterFile();
         newInstruction = false;
+        writeToDataBus = true;
     }
     /* Operations end */
 
-    /* Reservation station start */
-    @Override
-    public void registerObserver(ReservationStationObserver o) {
-        observers.add(o);
-    }
+
+    /* Load buffer start */
+
+    /* Send data start */
 
     @Override
-    public void removeObserver(ReservationStationObserver o) {
-        observers.remove(o);
+    public void notifyLoadBuffer(String data) {
+        Message message = new Message();
+        message.setMessage("WriteToDataBusLabel", data);
+        for (ReservationStationObserver o : observers) {
+            if (o instanceof LoadBuffer) {
+                o.ReservationUpdateLoadBuffer(message);
+            }
+        }
     }
+
+
+    /* Send data end */
+
+
+    /* Receive data start */
+    @Override
+    public void LoadBufferUpdateReservation(Message message) {
+        String messageValue = message.getLoadBufferUpdate();
+        if (messageValue.equals("")) return;
+        String[] parts = messageValue.split(",");
+
+        ArrayList<Tuple> ready = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            if (AddSubStation[i].isBusy() && AddSubStation[i].getLatency() == 0) {
+                ready.add(new Tuple(AddSubStation[i].getLabel(), 0, AddSubStation[i].getLatency()));
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            if (MulDivStation[i].isBusy() && MulDivStation[i].getLatency() == 0) {
+                ready.add(new Tuple(MulDivStation[i].getLabel(), 0, MulDivStation[i].getLatency()));
+            }
+        }
+
+        for (String part : parts) {
+            String label = part.split(":")[0];
+            String issueCycle = part.split(":")[1];
+            ready.add(new Tuple(label, 0, Integer.parseInt(issueCycle)));
+        }
+        notifyStoreBuffer();
+        String res = prioritizeWriteToBus(ready);
+        notifyLoadBuffer(res);
+    }
+
+
+    /* Receive data end */
+
+    /* Load buffer end */
+
+
+
+    /* Store Buffer start */
+
+    /* Send data start */
+    @Override
+    public void notifyStoreBuffer() {
+        Message message = new Message();
+        for (ReservationStationObserver o : observers) {
+            if (o instanceof StoreBuffer) {
+                o.ReservationUpdateStoreBuffer(message);
+            }
+        }
+    }
+    /* Send data end */
+
+    /* Receive data start */
+    @Override
+    public void storeBufferUpdateReservation(Message message) {
+        storeBufferRequiredLabels = new ArrayList<>();
+        storeBufferRequiredLabels.addAll(Arrays.asList(message.getRequiredLabels()));
+    }
+
+    /* Receive data end */
+
+    /* Store Buffer end */
+
+
+
+
+    /* Reservation station start */
 
     public String reservationStationToJson() {
         StringBuilder json = new StringBuilder("{");
@@ -515,20 +622,17 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
 
     /* Reservation station end */
 
-    public static void main(String[] args) {
-        ReservationStation rs = new ReservationStation();
-        ReservationStationItem item = new ReservationStationItem("R4", "A0", true,"ADD", null, null,"R1", "R2", 5, 2, 2);
-        rs.AddSubStation[0] = item;
-        rs.lastUpdated = 0;
-        rs.updateAddSubPointer();
-        RegisterFile rf = new RegisterFile();
 
-        rf.register(rs);
-        rs.registerObserver(rf);
 
-        rs.notifyRegisterFile();
-
-    }
-
+    @Override
+    public void storeBufferUpdateQueue(Message message) {}
+    @Override
+    public void storeBufferUpdateRegFile(Message message) {}
+    @Override
+    public void LoadBufferUpdateQueue(Message message) {}
+    @Override
+    public void LoadBufferUpdateRegFile(Message message) {}
+    @Override
+    public void LoadBufferUpdateDataBus(Message message) {}
 
 }

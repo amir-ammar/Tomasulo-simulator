@@ -10,4 +10,8 @@ public interface ReservationStationSubject {
     public void notifyRegisterFile();
 
     public void notifyDataBus(String data);
+
+    public void notifyLoadBuffer(String data);
+    public void notifyStoreBuffer();
+
 }

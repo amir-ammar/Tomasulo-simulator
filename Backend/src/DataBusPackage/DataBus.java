@@ -1,12 +1,11 @@
 package DataBusPackage;
-
+import LoadBufferPackage.LoadBufferObserver;
 import MessagesPackage.Message;
 import ReservationStationPackage.ReservationStationObserver;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class DataBus implements DataBusSubject, ReservationStationObserver {
+public class DataBus implements DataBusSubject, ReservationStationObserver, LoadBufferObserver {
 
     DataBusItem data;
 
@@ -48,31 +47,18 @@ public class DataBus implements DataBusSubject, ReservationStationObserver {
     @Override
     public void notifyObservers() {
         HashMap<String, String> message = new HashMap<>();
+
         message.put("dataBus", data.toString());
-        for (DataBusObserver o : observers) {
-            if (!data.getTag().equals("")) {
+        if (!data.getTag().equals("")) {
+            for (DataBusObserver o : observers) {
                 o.DataBusUpdate(new Message(message));
 //                clearData();
             }
         }
     }
 
-    public String toJson() {
-        return data.toJson();
-    }
-
     @Override
-    public void updateInstructionQueue(Message message) {
-
-    }
-
-    @Override
-    public void updateRegisterFile(Message message) {
-
-    }
-
-
-    public void updateDataBus(Message message) {
+    public void LoadBufferUpdateDataBus(Message message) {
         String [] dataBusUpdate = message.getDataBusUpdate().split(" ");
         if (dataBusUpdate[0].equals("write")) {
             data.setTag(dataBusUpdate[1]);
@@ -83,7 +69,22 @@ public class DataBus implements DataBusSubject, ReservationStationObserver {
         }
     }
 
-    // toString method
+    public void ReservationUpdateDataBus(Message message) {
+        String [] dataBusUpdate = message.getDataBusUpdate().split(" ");
+        if (dataBusUpdate[0].equals("write")) {
+            data.setTag(dataBusUpdate[1]);
+            data.setRegister(dataBusUpdate[2]);
+            data.setValue(Integer.parseInt(dataBusUpdate[3]));
+        } else {
+            notifyObservers();
+        }
+    }
+
+    public String toJson() {
+        return data.toJson();
+    }
+
+
     @Override
     public String toString() {
         if (data == null) {
@@ -91,4 +92,24 @@ public class DataBus implements DataBusSubject, ReservationStationObserver {
         }
         return data.toString();
     }
+
+
+    @Override
+    public void ReservationUpdateLoadBuffer(Message message) {}
+
+    @Override
+    public void ReservationUpdateStoreBuffer(Message message) {
+
+    }
+    @Override
+    public void LoadBufferUpdateQueue(Message message) {}
+    @Override
+    public void LoadBufferUpdateRegFile(Message message) {}
+    @Override
+    public void LoadBufferUpdateReservation(Message message) {}
+    @Override
+    public void ReservationUpdateInstructionQueue(Message message) {}
+    @Override
+    public void ReservationUpdateRegisterFile(Message message) {}
+
 }

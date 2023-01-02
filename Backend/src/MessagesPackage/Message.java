@@ -34,6 +34,10 @@ public class Message {
     public String [] getRequiredRegisters() {
         return message.get("requiredRegisters").split(" ");
     }
+    public String [] getRequiredLabels() {
+        return message.get("requiredLabels").split(" ");
+    }
+
 
     public String getUpdatedRegister() {
         return message.get("updatedRegister");
@@ -58,6 +62,18 @@ public class Message {
 
     public String getDataBusUpdate() {
         return message.get("dataBus");
+    }
+
+    public int getBufferSize() {
+        return Integer.parseInt(message.get("emptySize"));
+    }
+
+    public String getLoadBufferUpdate() {
+        return message.get("readyToWrite");
+    }
+
+    public String getWriteToDataBusLabel() {
+        return message.get("WriteToDataBusLabel");
     }
 
     @Override

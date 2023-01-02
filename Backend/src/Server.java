@@ -28,7 +28,6 @@ public class Server {
                             InputStream inputStream = exchange.getRequestBody();
                             byte[] bytes = inputStream.readAllBytes();
                             String requestBody = new String(bytes);
-//                            System.out.println(requestBody);
                             OutputStream outputStream = exchange.getResponseBody();
                             exchange.sendResponseHeaders(200, executor.getJsonData().length());
                             outputStream.write(executor.getJsonData().getBytes());

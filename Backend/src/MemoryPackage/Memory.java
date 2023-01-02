@@ -20,4 +20,20 @@ public class Memory {
     public int getSize() {
         return size;
     }
+
+    public void printMemory() {
+        for (int i = 0; i < size; i++) {
+            System.out.println("memory[" + i + "] = " + memory[i]);
+        }
+    }
+
+    public String toJson() {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < size; i++) {
+            json.append("{\"address\":").append(i).append(",\"value\":").append(memory[i]).append("},");
+        }
+        json = new StringBuilder(json.substring(0, json.length() - 1));
+        json.append("]");
+        return json.toString();
+    }
 }
