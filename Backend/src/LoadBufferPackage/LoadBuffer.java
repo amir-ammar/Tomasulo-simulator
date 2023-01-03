@@ -85,6 +85,20 @@ public class LoadBuffer implements InstructionQueueObserver, ExecutorObserver, L
         return json.toString();
     }
 
+    // toString
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        // add line
+        sb.append("\n");
+        sb.append("Load Buffer:\n");
+        for (int i = 0; i < 3; i++) {
+            sb.append(loadBuffer[i].toString());
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
     /* Operations end */
 
 
@@ -264,6 +278,7 @@ public class LoadBuffer implements InstructionQueueObserver, ExecutorObserver, L
         notifyInstructionQueue();
         notifyRegFile();
         newInstruction = false;
+        System.out.println(Executor.loadBuffer);
     }
 
     @Override

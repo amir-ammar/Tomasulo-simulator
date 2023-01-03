@@ -3,6 +3,7 @@ package StoreBuffer;
 import DataBusPackage.DataBusObserver;
 import InstructionQueuePackage.InstructionQueue;
 import InstructionQueuePackage.InstructionQueueObserver;
+import MainPackage.Executor;
 import MainPackage.ExecutorObserver;
 import MessagesPackage.Message;
 import RegisterFilePackage.RegisterFile;
@@ -82,6 +83,20 @@ public class StoreBuffer implements InstructionQueueObserver, StoreBufferSubject
         json.append("}");
         return json.toString();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        // add line
+        sb.append("\n");
+        sb.append("Store Buffer:\n");
+        for (int i = 0; i < 3; i++) {
+            sb.append(storeBuffer[i].toString());
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
 
     /* Operations end */
 
@@ -252,6 +267,7 @@ public class StoreBuffer implements InstructionQueueObserver, StoreBufferSubject
         notifyInstructionQueue();
         notifyRegisterFile();
         newInstruction = false;
+        System.out.println(Executor.storeBuffer);
     }
 
     @Override

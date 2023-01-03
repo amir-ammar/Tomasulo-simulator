@@ -47,7 +47,6 @@ public class DataBus implements DataBusSubject, ReservationStationObserver, Load
     @Override
     public void notifyObservers() {
         HashMap<String, String> message = new HashMap<>();
-
         message.put("dataBus", data.toString());
         if (!data.getTag().equals("")) {
             for (DataBusObserver o : observers) {
@@ -59,6 +58,7 @@ public class DataBus implements DataBusSubject, ReservationStationObserver, Load
 
     @Override
     public void LoadBufferUpdateDataBus(Message message) {
+        System.out.println("LoadBufferUpdate -> DataBus: " + message.getDataBusUpdate());
         String [] dataBusUpdate = message.getDataBusUpdate().split(" ");
         if (dataBusUpdate[0].equals("write")) {
             data.setTag(dataBusUpdate[1]);
@@ -70,6 +70,7 @@ public class DataBus implements DataBusSubject, ReservationStationObserver, Load
     }
 
     public void ReservationUpdateDataBus(Message message) {
+        System.out.println("ReservationUpdate -> DataBus: " + message.getDataBusUpdate());
         String [] dataBusUpdate = message.getDataBusUpdate().split(" ");
         if (dataBusUpdate[0].equals("write")) {
             data.setTag(dataBusUpdate[1]);

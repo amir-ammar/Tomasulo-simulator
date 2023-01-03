@@ -5,6 +5,7 @@ import InstructionQueuePackage.InstructionQueue;
 import InstructionQueuePackage.InstructionQueueObserver;
 import LoadBufferPackage.LoadBuffer;
 import LoadBufferPackage.LoadBufferObserver;
+import MainPackage.Executor;
 import MainPackage.ExecutorObserver;
 import MessagesPackage.Message;
 import RegisterFilePackage.RegisterFile;
@@ -192,7 +193,6 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
                 }
             }
         }
-        System.out.println("Write Back Instruction: " + writeBackInstruction);
         writeBackInstruction.sort(Collections.reverseOrder());
         writeToDataBus = writeBackInstruction.get(0).label.charAt(0) != 'L';
         return writeBackInstruction.get(0).label;
@@ -215,7 +215,6 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
 
         if (readyToWrite.size() == 0) return;
         String result = prioritizeWriteToBus(readyToWrite);
-        System.out.println("resulttttttttt: " + result);
         int index = Integer.parseInt(result.substring(1));
         if (result.charAt(0) == 'M') {
             writeBackInstruction = "write " + MulDivStation[index].getLabel() + " " + MulDivStation[index].getTargetReg() + " " + performALU(index, 'M');
@@ -236,7 +235,6 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
         message.put("dataBus", data);
         for (ReservationStationObserver o : observers) {
             if (o instanceof DataBus) {
-                System.out.println("DataBus: " + data);
                 o.ReservationUpdateDataBus(new Message(message));
             }
         }
@@ -360,7 +358,6 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
             idx = mulDivPointer;
             if (idx == 0) idx = 1;
             else idx = idx - 1;
-            System.out.println(MulDivStation[idx]);
             requiredRegisters = MulDivStation[idx].getQj() + " " + MulDivStation[idx].getQk();
             updatedRegister = MulDivStation[idx].getTargetReg() + ":" + MulDivStation[idx].getLabel();
         } else {
@@ -497,6 +494,7 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
         notifyRegisterFile();
         newInstruction = false;
         writeToDataBus = true;
+        System.out.println(Executor.reservationStation);
     }
     /* Operations end */
 
@@ -606,6 +604,7 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("\n");
         sb.append("Reservation Station: \n");
         sb.append("AddSubStation: \n");
         for (int i = 0; i < 3; i++) {
@@ -617,6 +616,7 @@ public class ReservationStation implements InstructionQueueObserver, ExecutorObs
             sb.append(MulDivStation[i].toString());
             sb.append("\n");
         }
+        sb.append("\n");
         return sb.toString();
     }
 

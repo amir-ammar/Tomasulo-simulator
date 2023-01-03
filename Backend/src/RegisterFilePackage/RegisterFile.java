@@ -7,6 +7,7 @@ import ReservationStationPackage.ReservationStationObserver;
 import StoreBuffer.StoreBuffer;
 import StoreBuffer.StoreBufferObserver;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class RegisterFile implements ReservationStationObserver, RegisterFileSubject, DataBusObserver, LoadBufferObserver, StoreBufferObserver {
@@ -60,7 +61,7 @@ public class RegisterFile implements ReservationStationObserver, RegisterFileSub
     /* Receive data start */
     @Override
     public void ReservationUpdateRegisterFile(Message message) {
-        System.out.println(message);
+        System.out.println("ReservationUpdate -> RegisterFile: " + message);
         String [] requiredRegisters = message.getRequiredRegisters();
         String updatedRegister = message.getUpdatedRegister();
         String updateLabel = updatedRegister.split(":")[1];
@@ -90,7 +91,7 @@ public class RegisterFile implements ReservationStationObserver, RegisterFileSub
     /* Receive data start */
     @Override
     public void LoadBufferUpdateRegFile(Message message) {
-        System.out.println(message);
+        System.out.println("LoadBufferUpdate -> RegisterFile: " + message);
         String updatedRegister = message.getUpdatedRegister();
         String updateLabel = updatedRegister.split(":")[1];
         String updateRegister = updatedRegister.split(":")[0].substring(1);
@@ -110,7 +111,7 @@ public class RegisterFile implements ReservationStationObserver, RegisterFileSub
     /* Receive data start */
     @Override
     public void storeBufferUpdateRegFile(Message message) {
-        System.out.println(message);
+        System.out.println("StoreBuffer -> regFile: " + message);
         String [] requiredRegisters = message.getRequiredRegisters();
         StringBuilder requiredRegistersValue = new StringBuilder();
 
@@ -138,7 +139,7 @@ public class RegisterFile implements ReservationStationObserver, RegisterFileSub
 
     @Override
     public void DataBusUpdate(Message message) {
-        System.out.println("DataBusUpdate: " + message);
+        System.out.println("DataBusUpdate -> RegFile: " + message);
         String tag = message.getDataBusUpdate().split(" ")[0];
         int value = Integer.parseInt(message.getDataBusUpdate().split(" ")[2]);
         for (RegisterFileItem i : registerFile) {

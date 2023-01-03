@@ -17,15 +17,15 @@ public class Executor implements ExecutorSubject {
     public static ArrayList<ExecutorObserver> observers;
     public static Memory memory;
 
-    InstructionQueue instructions;
+    public static InstructionQueue instructions;
 
-    ReservationStation reservationStation;
+    public static ReservationStation reservationStation;
 
-    LoadBuffer loadBuffer;
-    RegisterFile registerFile;
-    DataBus dataBus;
+    public static LoadBuffer loadBuffer;
+    public static RegisterFile registerFile;
+    public static DataBus dataBus;
 
-    StoreBuffer storeBuffer;
+    public static StoreBuffer storeBuffer;
 
     public Executor() {
 
@@ -68,6 +68,8 @@ public class Executor implements ExecutorSubject {
 
         loadBuffer.registerObserver(instructions);
         loadBuffer.registerObserver(reservationStation);
+        loadBuffer.registerObserver(registerFile);
+        loadBuffer.registerObserver(dataBus);
 
         storeBuffer.registerObserver(instructions);
         storeBuffer.registerObserver(reservationStation);
@@ -124,6 +126,7 @@ public class Executor implements ExecutorSubject {
         Executor executor = new Executor();
         while (true) {
             executor.run();
+            System.out.println("----------------------------------------");
 //            Thread.sleep(1000);
         }
     }
