@@ -32,7 +32,7 @@ public class StoreBuffer implements InstructionQueueObserver, StoreBufferSubject
         pointer = 0;
         newInstruction = false;
         for (int i = 0; i < 3; i++) {
-            storeBuffer[i] = new StoreBufferItem("L" + i);
+            storeBuffer[i] = new StoreBufferItem("S" + i);
         }
     }
 
@@ -73,14 +73,14 @@ public class StoreBuffer implements InstructionQueueObserver, StoreBufferSubject
     }
 
     public String toJson() {
-        StringBuilder json = new StringBuilder("{");
+        StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < 3; i++) {
             json.append(storeBuffer[i].toJsonString());
             if (i != 2) {
                 json.append(",");
             }
         }
-        json.append("}");
+        json.append("]");
         return json.toString();
     }
 

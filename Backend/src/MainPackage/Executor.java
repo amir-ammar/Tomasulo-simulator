@@ -36,13 +36,13 @@ public class Executor implements ExecutorSubject {
         registerFile = new RegisterFile();
         dataBus = new DataBus();
         storeBuffer = new StoreBuffer();
-        memory = new Memory(1024);
-        instructions.enqueue(new Instruction("LW R6 32 1"));
-        instructions.enqueue(new Instruction("LW R2 44 1"));
-        instructions.enqueue(new Instruction("MUL R0 R2 R4 10"));
-        instructions.enqueue(new Instruction("SUB R8 R6 R2 1"));
-        instructions.enqueue(new Instruction("SUB R10 R0 R6 1"));
-        instructions.enqueue(new Instruction("ADD R6 R8 R2 1"));
+        memory = new Memory(32);
+//        instructions.enqueue(new Instruction("LW R6 32 1"));
+//        instructions.enqueue(new Instruction("LW R2 44 1"));
+//        instructions.enqueue(new Instruction("MUL R0 R2 R4 10"));
+//        instructions.enqueue(new Instruction("SUB R8 R6 R2 1"));
+//        instructions.enqueue(new Instruction("SUB R10 R0 R6 1"));
+//        instructions.enqueue(new Instruction("ADD R6 R8 R2 1"));
 
         observers.add(instructions);
         observers.add(loadBuffer);
@@ -113,9 +113,9 @@ public class Executor implements ExecutorSubject {
         return "{\n" +
                 "  \"cycle\": " + cycle + ",\n" +
                 "  \"reservationStation\": " + reservationStation.reservationStationToJson() + ",\n" +
-                "  \"registerFile\": " + registerFile.toJson() + "\n" +
-                "  \"loadBuffer\": " + loadBuffer.toJson() + "\n" +
-                "  \"storeBuffer\": " + storeBuffer.toJson() + "\n" +
+                "  \"registerFile\": " + registerFile.toJson() + ",\n" +
+                "  \"loadBuffer\": " + loadBuffer.toJson() + ",\n" +
+                "  \"storeBuffer\": " + storeBuffer.toJson() + ",\n" +
                 "  \"memory\": " + memory.toJson() + "\n" +
                 "}";
     }

@@ -30,7 +30,8 @@ public class Memory {
     public String toJson() {
         StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < size; i++) {
-            json.append("{\"address\":").append(i).append(",\"value\":").append(memory[i]).append("},");
+            json.append("{\"label\":").append("\"Mem").append(i).append("\"").append(",\"value\":").append(memory[i]).append("},");
+
         }
         json = new StringBuilder(json.substring(0, json.length() - 1));
         json.append("]");

@@ -105,6 +105,55 @@ function App() {
     return registerFile;
   };
 
+  const generateLoadBuffer = () => {
+    let loadBuffer = [];
+    if (data?.loadBuffer) {
+      loadBuffer = data.loadBuffer;
+    } else {
+      for (let i = 0; i < 3; i++) {
+        loadBuffer.push({
+          label: `L${i}`,
+          busy: 'false',
+          address: '',
+        });
+      }
+    }
+    return loadBuffer;
+  };
+
+  const generateStoreBuffer = () => {
+    let storeBuffer = [];
+    if (data?.storeBuffer) {
+      storeBuffer = data.storeBuffer;
+    } else {
+      for (let i = 0; i < 3; i++) {
+        storeBuffer.push({
+          label: `S${i}`,
+          busy: 'false',
+          address: '',
+          V: '',
+          Q: '',
+        });
+      }
+    }
+    return storeBuffer;
+  };
+
+  const generateMemory = () => {
+    let memory = [];
+    if (data?.memory) {
+      memory = data.memory;
+    } else {
+      for (let i = 0; i < 32; i++) {
+        memory.push({
+          label: `Mem${i}`,
+          content: '',
+        });
+      }
+    }
+    return memory;
+  };
+
   return (
     <div className={classes.root}>
       <header>
@@ -125,7 +174,7 @@ function App() {
       {!start && <InputForm onStart={(value) => handleStart(value)} />}
       {start && (
         <>
-          <h3> Clock: {data?.cycle}</h3>
+          <h3>Clock: {data?.cycle}</h3>
           <div
             style={{
               display: 'flex',
@@ -150,20 +199,47 @@ function App() {
               <DataTable
                 headers={['Name', 'Busy', 'Op', 'Vj', 'Vk', 'Qj', 'Qk', 'A']}
                 rows={generateMulDivStation()}
-                className={classes.mulStation}
               />
             </div>
           </div>
           <div
             style={{
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'center',
               marginTop: '1rem',
             }}
           >
-            <h2 className={classes.title}>Register File</h2>
-            <DataTable
-              headers={['Name', 'Qi', 'Content']}
-              rows={generateRegisterFile()}
-            />
+            <div
+              style={{
+                marginRight: '1rem',
+              }}
+            >
+              <h2 className={classes.title}>Register File</h2>
+              <DataTable
+                headers={['Name', 'Qi', 'Content']}
+                rows={generateRegisterFile()}
+              />
+            </div>
+            <div>
+              <h2 className={classes.title}>Load Buffer</h2>
+              <DataTable
+                headers={['Name', 'Busy', 'Address']}
+                rows={generateLoadBuffer()}
+              />
+
+              <h2 className={classes.title}>Store Buffer</h2>
+              <DataTable
+                headers={['Name', 'Busy', 'Address', 'V', 'Q']}
+                rows={generateStoreBuffer()}
+              />
+
+              <h2 className={classes.title}>Memory</h2>
+              <DataTable
+                headers={['Name', 'Address']}
+                rows={generateMemory()}
+              />
+            </div>
           </div>
         </>
       )}

@@ -74,14 +74,14 @@ public class LoadBuffer implements InstructionQueueObserver, ExecutorObserver, L
     }
 
     public String toJson() {
-        StringBuilder json = new StringBuilder("{");
+        StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < 3; i++) {
             json.append(loadBuffer[i].toJson());
             if (i != 2) {
                 json.append(",");
             }
         }
-        json.append("}");
+        json.append("]");
         return json.toString();
     }
 

@@ -49,6 +49,37 @@ const DataTable = ({ headers, rows }) => {
                   {<TableCell key={row?.label + '9'}>{row?.content}</TableCell>}
                 </>
               )}
+              {row.label?.charAt(0) === 'L' && (
+                <>
+                  {<TableCell key={row?.label + '10'}>{row?.busy}</TableCell>}
+                  {
+                    <TableCell key={row?.label + '11'}>
+                      {row?.address}
+                    </TableCell>
+                  }
+                </>
+              )}
+              {row.label?.charAt(0) === 'S' && (
+                <>
+                  {<TableCell key={row?.label + '12'}>{row?.busy}</TableCell>}
+                  {
+                    <TableCell key={row?.label + '13'}>
+                      {row?.address}
+                    </TableCell>
+                  }
+                  {<TableCell key={row?.label + '14'}>{row?.V}</TableCell>}
+                  {<TableCell key={row?.label + '15'}>{row?.Q}</TableCell>}
+                </>
+              )}
+              {row.label?.includes('Mem') && (
+                <>
+                  {
+                    <TableCell key={row?.label + '16'}>
+                      {row?.content}
+                    </TableCell>
+                  }
+                </>
+              )}
             </TableRow>
           ))}
         </TableBody>
